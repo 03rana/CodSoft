@@ -1,0 +1,101 @@
+package tasks;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class task4 extends JFrame {
+    
+	private static final long serialVersionUID = 1L;
+	private static final String API_KEY = "7263c1079ed0b22acdee0911"; 
+    private static final String API_URL = "https://v6.exchangerate-api.com/v6/" + API_KEY + "/latest/";
+
+    private JComboBox<String> baseCurrencyComboBox;
+    private JComboBox<String> targetCurrencyComboBox;
+    private JTextField amountTextField;
+    private JLabel resultLabel;
+
+    public task4() {
+        setTitle("Currency Converter");
+        setSize(700, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(4, 2));
+
+        String[] currencies = {"USD", "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "FOK", "GBP", "GEL", "GGP", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HRK", "HTG", "HUF", "IDR", "ILS", "IMP", "INR", "IQD", "IRR", "ISK", "JEP", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KID", "KMF", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TVD", "TWD", "TZS", "UAH", "UGX", "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF", "XCD", "XDR", "XOF", "XPF", "YER", "ZAR", "ZMW", "ZWL"
+};
+        
+        add(new JLabel("Base Currency:"));
+        baseCurrencyComboBox = new JComboBox<>(currencies);
+        add(baseCurrencyComboBox);
+
+        add(new JLabel("Target Currency:"));
+        targetCurrencyComboBox = new JComboBox<>(currencies);
+        add(targetCurrencyComboBox);
+
+        add(new JLabel("Amount:"));
+        amountTextField = new JTextField();
+        add(amountTextField);
+
+        JButton convertButton = new JButton("Convert");
+        add(convertButton);
+
+        resultLabel = new JLabel("");
+        add(resultLabel);
+
+        convertButton.addActionListener(new ActionListener() {
+            
+            public void actionPerformed(ActionEvent e) {
+                convertCurrency();
+            }
+        });
+    }
+
+    private void convertCurrency() {
+        String baseCurrency = (String) baseCurrencyComboBox.getSelectedItem();
+        String targetCurrency = (String) targetCurrencyComboBox.getSelectedItem();
+        double amount = Double.parseDouble(amountTextField.getText());
+        double exchangeRate = getExchangeRate(baseCurrency, targetCurrency);
+        double convertedAmount = amount * exchangeRate;
+        resultLabel.setText(String.format("%.2f %s is equal to %.2f %s", amount, baseCurrency, convertedAmount, targetCurrency));
+    }
+
+    private double getExchangeRate(String baseCurrency, String targetCurrency) {
+        try {
+            URL url = new URL(API_URL + baseCurrency);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            BufferedReader inputReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = inputReader.readLine()) != null) {
+                response.append(line);
+            }
+
+            inputReader.close();
+
+            String jsonResponse = response.toString();
+            int startIndex = jsonResponse.indexOf("\"" + targetCurrency + "\":");
+            int endIndex = jsonResponse.indexOf(",", startIndex);
+            String rateSubstring = jsonResponse.substring(startIndex, endIndex);
+
+            return Double.parseDouble(rateSubstring.split(":")[1]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0.0;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            task4 frame = new task4();
+            frame.setVisible(true);
+        });
+    }
+}
+
