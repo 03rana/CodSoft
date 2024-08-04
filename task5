@@ -1,0 +1,93 @@
+package tasks;
+import java.util.*;
+import java.io.*;
+
+class Student {
+    String name;
+    int rollNumber;
+    String grade;
+
+    Student(String name, int rollNumber, String grade) {
+        this.name = name;
+        this.rollNumber = rollNumber;
+        this.grade = grade;
+    }
+}
+
+class StudentManagementSystem {
+    List<Student> students = new ArrayList<>();
+
+    void addStudent(Student s) { students.add(s); }
+    void removeStudent(int roll) { students.removeIf(s -> s.rollNumber == roll); }
+    Student searchStudent(int roll) { return students.stream().filter(s -> s.rollNumber == roll).findFirst().orElse(null); }
+    List<Student> getAllStudents() { return new ArrayList<>(students); }
+
+    void saveToFile(String filename) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(students);
+        }
+    }
+
+    void loadFromFile(String filename) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            students = (List<Student>) ois.readObject();
+        }
+    }
+}
+
+class StudentManagementSystemUI {
+    StudentManagementSystem system = new StudentManagementSystem();
+
+    void start() {
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        do {
+            System.out.println("1. Add\n2. Remove\n3. Search\n4. Display All\n5. Exit");
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Name: ");
+                    String name = sc.next();
+                    System.out.print("Roll Number: ");
+                    int roll = sc.nextInt();
+                    System.out.print("Grade: ");
+                    String grade = sc.next();
+                    system.addStudent(new Student(name, roll, grade));
+                    break;
+                case 2:
+                    System.out.print("Roll Number to remove: ");
+                    roll = sc.nextInt();
+                    system.removeStudent(roll);
+                    break;
+                case 3:
+                    System.out.print("Roll Number to search: ");
+                    roll = sc.nextInt();
+                    Student s = system.searchStudent(roll);
+                    if (s != null)
+                        System.out.println(s.name + ", " + s.rollNumber + ", " + s.grade);
+                    else
+                        System.out.println("Student not found");
+                    break;
+                case 4:
+                    for (Student student : system.getAllStudents()) {
+                        System.out.println("Name: "+student.name + ", " +"Roll Number: " +student.rollNumber + ", " +"Grade: "+ student.grade);
+                    }
+                    break;
+                case 5:
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid choice");
+            }
+        } while (choice != 5);
+    }
+}
+
+public class main {
+    public static void main(String[] args) {
+        StudentManagementSystemUI ui = new StudentManagementSystemUI();
+        ui.start();
+    }
+}
